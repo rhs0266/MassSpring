@@ -1,4 +1,5 @@
 #include "library.h"
+#include "particle.h"
 
 double mousePosX, mousePosY;
 void resize(int,int);
@@ -9,6 +10,9 @@ void glutMotion(int, int);
 void Timer(int unused);
 
 int main(int argc, char** argv){
+
+    Initialize();
+
 	glutInit(&argc, argv);
     // glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE);
@@ -32,11 +36,19 @@ int main(int argc, char** argv){
 void display(){
     
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    // glPolygonMode(GL_BACK,GL_FILL);
-    // glPolygonMode(GL_FRONT,GL_FILL);
+    glPolygonMode(GL_BACK,GL_FILL);
+    glPolygonMode(GL_FRONT,GL_FILL);
 
-    glColor3f(255,0,0);
-    glRectf(-25,25,25,-25);
+    glColor3f(255,255,255);
+    
+    { // draw ground
+        glBegin(GL_LINE_STRIP);
+        glV2(-width/2, 0);
+        glV2(width/2, 0);
+        glEnd();
+    }
+    drawParticles();
+    nextFrame();
 
     glutSwapBuffers();
 }
@@ -46,7 +58,7 @@ void resize(int w, int h) {
     height = h;
     glViewport(0, 0, w, h);
     glMatrixMode(GL_PROJECTION);
-    glOrtho(-width/2,width/2,-height/2,height/2,1,-1);
+    glOrtho(-width/2,width/2,-height/2 + 200,height/2 + 200,1,-1);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 }

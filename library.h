@@ -7,6 +7,7 @@
 #include <Eigen/Dense>
 #include <Eigen/LU>
 #include <Eigen/Geometry>
+#include <math.h>
 FILE *out=stdout;
 
 using namespace std;
