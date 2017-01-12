@@ -2,9 +2,10 @@
 #include "library.h"
 const double dT = 0.02; // 0.01 second per one frame
 const double g = 9.8; // gravity
-const double k = 0.1; // spring constant
+const double k = 0.05; // spring constant
 const int N = 7; // N*N = number of particles
 const double DEG2RAD = 3.141592/180;
+const double coeff = 0.3; // coefficient for collision
 
 struct Particle{
 	V2 p; // position
@@ -18,16 +19,16 @@ struct Particle{
 	Particle(){};
 	Particle(V2 _p, V2 _v, double _mass, int _id, int _fixed = 0):p(_p),v(_v),mass(_mass),id(_id),fixed(_fixed){};
 	void move(){ // change position to next frame
-		F = V2(0,-g);
+		F = V2(0,-g) * mass;
 		for (int i=0;i<connect.size();i++){
 			Particle* q = connect[i];
 			double rest = restLength[i];
-			V2 diff = q->p - p;
+			V2 diff = q->p - p; // this to that
 			double len = sqrt(diff.dot(diff));
 			if (len < 1e-6) continue;
 
 			V2 vec = diff / len;
-			V2 f = -k * vec * (rest - len);
+			V2 f = (-k * (rest - len)) * vec;
 
 			F = F + f;
 		}
@@ -41,8 +42,8 @@ struct Particle{
 
 		if (next_p(1) < 0){
 			// TODO : handle collision
-			next_p = p - v*dT;
-			next_v(1) = -next_v(1);
+			next_p(1) = 0;
+			next_v(1) = -next_v(1) * coeff;
 		}
 
 		p = next_p;
@@ -61,10 +62,11 @@ void push_edge(Particle *x, Particle *y, double rest){
 Particle particles[N*N];
 int dir1[4][2]={{0,1},{1,0},{0,-1},{-1,0}};
 int dir2[4][2]={{1,1},{1,-1},{-1,-1},{-1,1}};
+int dir3[4][2]={{0,2},{2,0},{0,-2},{-2,0}};
 void Initialize(){
 	for (int t=0;t<N*N;t++){
 		int i = t/N, j = t%N;
-		particles[t]=Particle(V2(-150,50) + V2(50,0)*i + V2(0,50)*j, V2(0,0), 1, t, 0);
+		particles[t]=Particle(V2(-150,10) + V2(50,0)*i + V2(0,50)*j, V2(0,0), 0.01, t, 0);
 		for (int k=0;k<4;k++){
 			int i2 = i + dir1[k][0], j2 = j + dir1[k][1];
 			if (i2<0 || j2<0 || i2>=N || j2>=N) continue;
@@ -76,6 +78,12 @@ void Initialize(){
 			if (i2<0 || j2<0 || i2>=N || j2>=N) continue;
 			int t2 = i2 * N + j2;
 			push_edge(&particles[t], &particles[t2], 50 * sqrt(2.0));
+		}
+		for (int k=0;k<4;k++){
+			int i2 = i + dir3[k][0], j2 = j + dir3[k][1];
+			if (i2<0 || j2<0 || i2>=N || j2>=N) continue;
+			int t2 = i2 * N + j2;
+			push_edge(&particles[t], &particles[t2], 50 * 2);
 		}
 	}
 }
