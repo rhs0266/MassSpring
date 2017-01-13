@@ -1,7 +1,10 @@
 #include "library.h"
 #include "particle.h"
+#include "UI.h"
 
-double mousePosX, mousePosY;
+int mousePosX, mousePosY;
+int left_button;
+bool fixation_flag;
 void resize(int,int);
 void display();
 void keyboard(unsigned char key, int x, int y);
@@ -10,6 +13,14 @@ void glutMotion(int, int);
 void Timer(int unused);
 
 int main(int argc, char** argv){
+
+    { // print user manual
+        printf("USER MANUAL\n");
+        printf("-------------------------------\n");
+        printf("[f + l_click] : change fixation state for particle\n");
+        printf("[l_click] : drage fixed particle to mouse position\n");
+        printf("-------------------------------\n");
+    }
 
     Initialize();
 
@@ -75,24 +86,37 @@ void keyboard(unsigned char key, int x, int y) {
             fprintf(out,"Thank you.\n");
             exit(0);
             break;
+        case 'f':
+            fixation_flag = 1;
+            break;
         default:
             break;
  	}
  }
 
  void glutMouse(int button, int state, int x, int y){
-    curMouseX = x, curMouseY = y;
+    mousePosX = x - width/2;
+    mousePosY = height/2 - y + 200;
     switch ( button )
     {
         case GLUT_LEFT_BUTTON:
 
             if ( state == GLUT_DOWN )
             {
-                mousePosX = x;
-                mousePosY = y;
+                left_button = 1;
+                if (fixation_flag == 1){
+                    break;
+                }
+                follow(V2(mousePosX, mousePosY), getParticles());
             }
             else if ( state == GLUT_UP )
             {
+                left_button = 0;
+                if (fixation_flag == 1){
+                    fixation(V2(mousePosX, mousePosY), getParticles());
+                    fixation_flag = 0;
+                    break;
+                }
             }
             break;
         case GLUT_RIGHT_BUTTON:
@@ -109,5 +133,10 @@ void keyboard(unsigned char key, int x, int y) {
     return;
 }
 void glutMotion(int x, int y){
+    mousePosX = x - width/2;
+    mousePosY = height/2 - y + 200;
+    if (left_button == 1){
+        follow(V2(mousePosX, mousePosY), getParticles());
+    }
     return;
 }

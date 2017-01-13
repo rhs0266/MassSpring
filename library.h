@@ -8,6 +8,7 @@
 #include <Eigen/LU>
 #include <Eigen/Geometry>
 #include <math.h>
+#include <assert.h>
 FILE *out=stdout;
 
 using namespace std;

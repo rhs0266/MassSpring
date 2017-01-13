@@ -1,13 +1,14 @@
 #pragma once
+
 #include "library.h"
 const double dT = 0.01; // 0.01 second per one frame
 const double g = 9.8; // gravity
-const double k_s = 0.05; // spring constant
-const double k_d = 0.01; // damping constant
+const double k_s = 0.1; // spring constant
+const double k_d = 0.005; // damping constant
 const int N = 5; // N*N = number of particles
 const double DEG2RAD = 3.141592/180;
 const double coeff = 0.3; // coefficient for collision
-const double air = 0.1; // air resist
+const double air = 0.01; // air resist
 
 struct Particle{
 	V2 p; // position
@@ -65,11 +66,12 @@ void push_edge(Particle *x, Particle *y, double rest){
 	y->restLength.push_back(rest);
 }
 
-Particle particles[N*N];
+vector<Particle> particles;
 int dir1[4][2]={{0,1},{1,0},{0,-1},{-1,0}};
 int dir2[4][2]={{1,1},{1,-1},{-1,-1},{-1,1}};
 int dir3[4][2]={{0,2},{2,0},{0,-2},{-2,0}};
 void Initialize(){
+	particles.resize(N*N);
 	for (int t=0;t<N*N;t++){
 		int i = t/N, j = t%N;
 		particles[t]=Particle(V2(-50 * (N/2),100) + V2(50,0)*i + V2(0,50)*j, V2(0,0), 2.0 / (N*N), t, 0);
@@ -126,4 +128,8 @@ void nextFrame(){
 	for (int i=0;i<N*N;i++){
 		particles[i].move();
 	}
+}
+
+vector<Particle> *getParticles(){
+	return &particles;
 }
