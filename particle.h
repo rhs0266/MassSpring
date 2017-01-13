@@ -1,11 +1,13 @@
 #pragma once
 #include "library.h"
-const double dT = 0.02; // 0.01 second per one frame
+const double dT = 0.01; // 0.01 second per one frame
 const double g = 9.8; // gravity
-const double k = 0.05; // spring constant
-const int N = 7; // N*N = number of particles
+const double k_s = 0.05; // spring constant
+const double k_d = 0.01; // damping constant
+const int N = 5; // N*N = number of particles
 const double DEG2RAD = 3.141592/180;
 const double coeff = 0.3; // coefficient for collision
+const double air = 0.1; // air resist
 
 struct Particle{
 	V2 p; // position
@@ -19,19 +21,24 @@ struct Particle{
 	Particle(){};
 	Particle(V2 _p, V2 _v, double _mass, int _id, int _fixed = 0):p(_p),v(_v),mass(_mass),id(_id),fixed(_fixed){};
 	void move(){ // change position to next frame
+		if (fixed) return;
+		F = V2(0,0);
 		F = V2(0,-g) * mass;
 		for (int i=0;i<connect.size();i++){
 			Particle* q = connect[i];
 			double rest = restLength[i];
-			V2 diff = q->p - p; // this to that
-			double len = sqrt(diff.dot(diff));
+			V2 diff = p - q->p; // that to this
+			double len = diff.norm();
 			if (len < 1e-6) continue;
 
 			V2 vec = diff / len;
-			V2 f = (-k * (rest - len)) * vec;
+			V2 f = -(k_s * (len - rest) + k_d * (v - q->v).dot(vec)) * vec;
 
 			F = F + f;
 		}
+		// printf("%lf ",F.norm());
+		F = F + (-air) *  v; // drag force
+		// printf("%lf\n",F.norm());
 
 		V2 a = F / mass; // acceleration
 
@@ -40,12 +47,11 @@ struct Particle{
 		V2 next_v = v + a * dT;
 		// --------------------- //
 
-		if (next_p(1) < 0){
-			// TODO : handle collision
-			next_p(1) = 0;
-			next_v(1) = -next_v(1) * coeff;
-		}
-
+		// if (next_p(1) < 0){
+		// 	// TODO : handle collision
+		// 	next_p(1) = 0;
+		// 	next_v(1) = -next_v(1) * coeff;
+		// }
 		p = next_p;
 		v = next_v;
 	}
@@ -66,7 +72,7 @@ int dir3[4][2]={{0,2},{2,0},{0,-2},{-2,0}};
 void Initialize(){
 	for (int t=0;t<N*N;t++){
 		int i = t/N, j = t%N;
-		particles[t]=Particle(V2(-150,10) + V2(50,0)*i + V2(0,50)*j, V2(0,0), 0.01, t, 0);
+		particles[t]=Particle(V2(-50 * (N/2),100) + V2(50,0)*i + V2(0,50)*j, V2(0,0), 2.0 / (N*N), t, 0);
 		for (int k=0;k<4;k++){
 			int i2 = i + dir1[k][0], j2 = j + dir1[k][1];
 			if (i2<0 || j2<0 || i2>=N || j2>=N) continue;
@@ -79,13 +85,15 @@ void Initialize(){
 			int t2 = i2 * N + j2;
 			push_edge(&particles[t], &particles[t2], 50 * sqrt(2.0));
 		}
-		for (int k=0;k<4;k++){
-			int i2 = i + dir3[k][0], j2 = j + dir3[k][1];
-			if (i2<0 || j2<0 || i2>=N || j2>=N) continue;
-			int t2 = i2 * N + j2;
-			push_edge(&particles[t], &particles[t2], 50 * 2);
-		}
+		// for (int k=0;k<4;k++){
+		// 	int i2 = i + dir3[k][0], j2 = j + dir3[k][1];
+		// 	if (i2<0 || j2<0 || i2>=N || j2>=N) continue;
+		// 	int t2 = i2 * N + j2;
+		// 	push_edge(&particles[t], &particles[t2], 50 * 2);
+		// }
 	}
+	particles[N-1].fixed = 1;
+	particles[N*N-1].fixed = 1;
 }
 
 
@@ -101,7 +109,9 @@ void drawCircle(V2 p, double radius){
 
 void drawParticles(){
 	for (int i=0;i<N*N;i++){
+		if (particles[i].fixed==1) glColor3f(255,255,0);
 		drawCircle(particles[i].p, 5.0);
+		glColor3f(255,255,255);
 		for (int j=0;j<particles[i].connect.size();j++){
 			Particle q = *particles[i].connect[j];
 			glBegin(GL_LINE_STRIP);

@@ -28,7 +28,7 @@ float PI = 3.141592f;
 float Near = 5.0f, Far = 700.0f;
 float trackballRadius;// = 80.0f;
 double fov = 45.0;
-unsigned timeStep = 30;
+unsigned timeStep = 1;
 
 typedef Vector2f V2;
 #define glV2(x,y) glVertex3f(x,y,0)
