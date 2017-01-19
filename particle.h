@@ -49,7 +49,7 @@ struct Particle{
 		V2 next_v = v + a * dT;
 		// --------------------- //
 
-		if (next_p(1) < 0){
+		if (next_p(1) < -1e-3){
 			// TODO : handle collision
 			next_p(1) = 0;
 			next_v(1) = -next_v(1) * coeff;
