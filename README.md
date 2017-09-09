@@ -4,3 +4,5 @@
 2. make run : run (must execute after compile)
 3. make all : compile + run
 4. ESC : exit
+
+## Caution : This model uses "Explicit Euler Method". Very slow, low accuracy, unstable.
